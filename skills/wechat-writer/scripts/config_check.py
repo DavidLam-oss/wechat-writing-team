@@ -69,6 +69,7 @@ def check_personal_files():
     personal_files = {
         "style_guide_david.md": "写作风格指南（目前为示例，需要替换为你自己的风格）",
         "team_memory.md": "团队记忆与踩坑记录（目前为示例，需要按需更新）",
+        "published_article_index.md": "已发布文章索引（目前为示例，需要替换为你自己的文章列表）",
     }
     for filename, description in personal_files.items():
         file_path = knowledge_dir / filename
