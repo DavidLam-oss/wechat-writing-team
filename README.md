@@ -112,8 +112,8 @@ python3 skills/wechat-director/scripts/config_check.py  # 检测生图配置
 ```json
 {
   "gemini": {
-    "base_url": "https://api.example.com/v1",
-    "model": "gemini-2.5-flash",
+    "base_url": "https://generativelanguage.googleapis.com",
+    "model": "gemini-2.0-flash-exp",
     "api_key": "your-key-here"
   },
   "gpt-image2": {
