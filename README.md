@@ -22,10 +22,24 @@
 **目录结构：**
 ```
 skills/wechat-writer/
-├── SKILL.md              # 主入口
-├── scripts/              # cleaner, research, review_toolkit, archive
-├── references/           # 角色定义、流程模板、I/O 规范
-└── knowledge/            # 风格指南、审校清单、SEO 词库、文章索引
+├── SKILL.md                        # 主入口（Skill 触发点）
+├── scripts/
+│   ├── config_check.py             # ⭐ 首次使用前运行，检测环境配置
+│   ├── cleaner.py                  # 素材清洗
+│   ├── research.py                 # 事实核查
+│   ├── review_toolkit.py           # 四轮审校
+│   └── archive.py                  # 发布归档
+├── references/
+│   ├── core_personas.md            # 5 大核心角色定义
+│   ├── routine_sprout.md           # 发芽流程规范
+│   ├── template_01_plan.md          # 大纲模板
+│   └── io_schema.md                # I/O 规范
+└── knowledge/
+    ├── style_guide_david.md        # 👤 写作风格（需替换为你的风格）
+    ├── team_memory.md              # 👤 写作偏好（需按需更新）
+    ├── ai_smell_guide.md           # 去 AI 味审校清单
+    ├── wechat_index_keywords.md    # SEO 关键词积累库
+    └── published_article_index.md  # 👤 文章索引（需替换为你的文章）
 ```
 
 ---
@@ -47,12 +61,13 @@ skills/wechat-writer/
 **目录结构：**
 ```
 skills/wechat-director/
-├── SKILL.md              # 主入口
+├── SKILL.md                        # 主入口
 ├── scripts/
-│   └── config_check.py   # 配置检测（首次使用前运行）
-├── references/           # I/O 规范、视觉风格指南
+│   └── config_check.py             # ⭐ 首次使用前运行，检测生图配置
+├── references/
+│   └── io_schema.md                # I/O 规范
 └── assets/
-    └── IP_Reference.png  # IP 形象参考图
+    └── IP_Reference.png             # IP 形象参考图
 ```
 
 ---
@@ -63,7 +78,14 @@ skills/wechat-director/
 
 把这些文件放入你的 Claude Code / Codex / Gemini CLI 工作区。SKILL.md 会被自动识别为 Skill 入口。
 
-### 2. 写作（WeChat Writer）
+### 2. 首次配置（推荐先运行）
+
+```bash
+python3 skills/wechat-writer/scripts/config_check.py   # 检测写作环境
+python3 skills/wechat-director/scripts/config_check.py  # 检测生图配置
+```
+
+### 3. 写作（WeChat Writer）
 
 ```
 /interview [话题]    # 访谈模式，从零挖掘素材
@@ -71,18 +93,13 @@ skills/wechat-director/
 /write [标题] --from-stage N  # 从任意阶段继续
 ```
 
-### 3. 配图（WeChat Director）
+### 4. 配图（WeChat Director）
 
 ```
 /draw                # 输入 Storyboard.md 路径，自动生成分镜
 ```
 
-**首次使用前**，建议运行配置检测：
-```bash
-python3 skills/wechat-director/scripts/config_check.py
-```
-
-### 4. SEO 关键词调研（可选）
+### 5. SEO 关键词调研（可选）
 
 安装 [`wechat-index-query`](https://github.com/mileson/wechat-index-query) Skill（仅支持 macOS，需手动打开微信指数小程序），在策划阶段查微信指数找上升搜索词。
 
@@ -111,11 +128,24 @@ TinyPNG 压缩和腾讯云 COS 上传为可选功能。
 
 ---
 
+## ⚠️ 需要用户个人化的文件
+
+以下文件位于 `knowledge/` 目录，克隆后建议按需替换：
+
+| 文件 | 说明 |
+|------|------|
+| `style_guide_david.md` | 写作风格指南（示例为英文教学风格，需替换为你自己的文风） |
+| `team_memory.md` | 团队记忆与踩坑记录（示例内容，需更新为你的偏好） |
+| `published_article_index.md` | 已发布文章索引（示例内容，需替换为你自己的文章列表） |
+
+---
+
 ## 依赖
 
 - Python 3.8+
-- Pillow（图片处理）
+- Pillow（图片处理，可选）
 - qcloud-cos-python-sdk-v5（腾讯云上传，可选）
+- Obsidian CLI（archive 功能需要，可选）
 
 ---
 
