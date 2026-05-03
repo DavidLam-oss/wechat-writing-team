@@ -1,5 +1,7 @@
 # WeChat Writing Team
 
+[![Obsidian 微信发布插件](https://img.shields.io/badge/Obsidian-微信发布-blue?logo=obsidian)](https://github.com/DavidLam-oss/obsidian-wechat-converter) [Obsidian 微信发布插件](https://github.com/DavidLam-oss/obsidian-wechat-converter) — 写完文章后一键发送到微信公众号草稿箱
+
 微信公众号写作 + 视觉导演全套 Skill。对接 Claude Code / Codex / Gemini CLI，让 AI 帮你从访谈挖掘到配图生成，全流程跑通。
 
 ---
