@@ -113,7 +113,7 @@ python3 skills/wechat-director/scripts/config_check.py  # 检测生图配置
 {
   "gemini": {
     "base_url": "https://generativelanguage.googleapis.com",
-    "model": "gemini-2.0-flash-exp",
+    "model": "gemini-3.1-flash-image-preview",
     "api_key": "your-key-here"
   },
   "gpt-image2": {
@@ -134,7 +134,7 @@ TinyPNG 压缩和腾讯云 COS 上传为可选功能。
 
 | 文件 | 说明 |
 |------|------|
-| `style_guide_david.md` | 写作风格指南（示例为英文教学风格，需替换为你自己的文风） |
+| `style_guide_david.md` | 写作风格指南（示例为 David 的个人文风，需替换为你自己的风格） |
 | `team_memory.md` | 团队记忆与踩坑记录（示例内容，需更新为你的偏好） |
 | `published_article_index.md` | 已发布文章索引（示例内容，需替换为你自己的文章列表） |
 
