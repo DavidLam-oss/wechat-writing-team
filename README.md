@@ -16,9 +16,9 @@
 | **wechat-director** | `/draw` | 视觉导演：读定稿设计分镜（默认电影感 + 认知草图双镜头）→ 批量生图 → 注入正文 → 拼接封面 |
 | **wechat-official-batch-download** | — | 素材采集：批量下载公众号文章，保留 HTML / Markdown / 图片 / 元数据，构建可追溯语料库 |
 
-![WeChat Writer 工作流](assets/wechat_writer_flow_v351_wide_clean.png)
+![WeChat Writer 工作流（v3.7.0）](assets/wechat_writer_flow_wide_clean_v37.png)
 
-![WeChat Director 工作流](assets/wechat_director_flow_wide_clean_v2.png)
+![WeChat Director 工作流（v2.5.1）](assets/wechat_director_flow_wide_clean_v251.png)
 
 ---
 
