@@ -1,0 +1,113 @@
+# (可选) 你自己的专属代理 —— 取消注释并填上主机名，再设置
+#   DWT_PRIVATE_PROXY_HOSTS="your-proxy-host.com"
+# 它们会被优先使用。示例：
+# https://00.your-proxy-host.com
+# https://01.your-proxy-host.com
+
+# 公共/备份代理池 (worker-proxy.asia)
+https://00.worker-proxy.asia
+https://01.worker-proxy.asia
+https://02.worker-proxy.asia
+https://03.worker-proxy.asia
+https://04.worker-proxy.asia
+https://05.worker-proxy.asia
+https://06.worker-proxy.asia
+https://07.worker-proxy.asia
+https://08.worker-proxy.asia
+https://09.worker-proxy.asia
+https://10.worker-proxy.asia
+https://11.worker-proxy.asia
+https://12.worker-proxy.asia
+https://13.worker-proxy.asia
+https://14.worker-proxy.asia
+https://15.worker-proxy.asia
+
+# 公共/备份代理池 (net-proxy.asia)
+https://00.net-proxy.asia
+https://01.net-proxy.asia
+https://02.net-proxy.asia
+https://03.net-proxy.asia
+https://04.net-proxy.asia
+https://05.net-proxy.asia
+https://06.net-proxy.asia
+https://07.net-proxy.asia
+https://08.net-proxy.asia
+https://09.net-proxy.asia
+https://10.net-proxy.asia
+https://11.net-proxy.asia
+https://12.net-proxy.asia
+https://13.net-proxy.asia
+https://14.net-proxy.asia
+https://15.net-proxy.asia
+
+# 公共/备份代理池 (1235566.space)
+https://00.1235566.space
+https://01.1235566.space
+https://02.1235566.space
+https://03.1235566.space
+https://04.1235566.space
+https://05.1235566.space
+https://06.1235566.space
+https://07.1235566.space
+https://08.1235566.space
+https://09.1235566.space
+https://10.1235566.space
+https://11.1235566.space
+https://12.1235566.space
+https://13.1235566.space
+https://14.1235566.space
+https://15.1235566.space
+
+# 公共/备份代理池 (worker-proxy.shop)
+https://00.worker-proxy.shop
+https://01.worker-proxy.shop
+https://02.worker-proxy.shop
+https://03.worker-proxy.shop
+https://04.worker-proxy.shop
+https://05.worker-proxy.shop
+https://06.worker-proxy.shop
+https://07.worker-proxy.shop
+https://08.worker-proxy.shop
+https://09.worker-proxy.shop
+https://10.worker-proxy.shop
+https://11.worker-proxy.shop
+https://12.worker-proxy.shop
+https://13.worker-proxy.shop
+https://14.worker-proxy.shop
+https://15.worker-proxy.shop
+
+# 公共/备份代理池 (worker-proxys.cyou)
+https://00.worker-proxys.cyou
+https://01.worker-proxys.cyou
+https://02.worker-proxys.cyou
+https://03.worker-proxys.cyou
+https://04.worker-proxys.cyou
+https://05.worker-proxys.cyou
+https://06.worker-proxys.cyou
+https://07.worker-proxys.cyou
+https://08.worker-proxys.cyou
+https://09.worker-proxys.cyou
+https://10.worker-proxys.cyou
+https://11.worker-proxys.cyou
+https://12.worker-proxys.cyou
+https://13.worker-proxys.cyou
+https://14.worker-proxys.cyou
+https://15.worker-proxys.cyou
+
+# 公共/备份代理池 (worker-proxy.cyou)
+https://00.worker-proxy.cyou
+https://01.worker-proxy.cyou
+https://02.worker-proxy.cyou
+https://03.worker-proxy.cyou
+https://04.worker-proxy.cyou
+https://05.worker-proxy.cyou
+https://06.worker-proxy.cyou
+https://07.worker-proxy.cyou
+https://08.worker-proxy.cyou
+https://09.worker-proxy.cyou
+https://10.worker-proxy.cyou
+https://11.worker-proxy.cyou
+https://12.worker-proxy.cyou
+https://13.worker-proxy.cyou
+https://14.worker-proxy.cyou
+https://15.worker-proxy.cyou

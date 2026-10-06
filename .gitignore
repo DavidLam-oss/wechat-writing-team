@@ -8,6 +8,22 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyo
+
+# Virtualenvs / packaging
+.venv/
+venv/
+env/
+build/
+dist/
+*.egg-info/
+
+# Test / type / lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # IDE
 .idea/
@@ -17,6 +33,20 @@ __pycache__/
 
 # Obsidian
 .trash/
+
+# Local runtime output (workspaces are created outside this repo; keep stray ones out)
+articles/
+published/
+conductor/
+zpicture.assets/
+
+# Secrets / local config
+.env
+.env.*
+api_keys.yaml
+api_keys.yml
+api_keys.json
+*.local.json
 
 # Misc
 *.log

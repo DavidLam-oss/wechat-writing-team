@@ -5,9 +5,9 @@ review_toolkit.py - 文章审校报告渲染工具
 纯渲染工具：将 JSON 格式的审校报告渲染为 Markdown。
 
 用法:
-  python3 review_toolkit.py --mode critique /path/to/_temp_critique.json
-  python3 review_toolkit.py --mode directive /path/to/_temp_directive.json
-  python3 review_toolkit.py --mode feedback /path/to/_temp_feedback.json
+  python review_toolkit.py --mode critique path/to/_temp_critique.json
+  python review_toolkit.py --mode directive path/to/_temp_directive.json
+  python review_toolkit.py --mode feedback path/to/_temp_feedback.json
 
 注意：
   - JSON 文件由调用方（Agent）生成，本脚本只负责渲染。
@@ -15,6 +15,13 @@ review_toolkit.py - 文章审校报告渲染工具
   - 在本地（Claude Code / Codex / Gemini CLI）：人工生成 JSON 或由主 Agent 生成。
 """
 import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from console_encoding import configure_console
+
+configure_console()
 import argparse
 import sys
 from pathlib import Path
@@ -30,12 +37,14 @@ def clean_text(text):
 
 
 def render_markdown_file(lines, output_path):
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text('\n'.join(lines), encoding='utf-8')
         print(f"Successfully generated: {output_path}", file=sys.stderr)
+        return True
     except IOError as e:
         print(f"Error writing output file: {e}", file=sys.stderr)
+        return False
 
 
 def append_review_section(md, title, data):
@@ -121,7 +130,7 @@ def render_critique(data, output_path):
     md.append(f"---")
     md.append(f"**老罗总评**: {clean_text(data.get('overall_comment', ''))}")
 
-    render_markdown_file(md, output_path)
+    return render_markdown_file(md, output_path)
 
 
 def render_directive(data, output_path):
@@ -143,7 +152,7 @@ def render_directive(data, output_path):
             lines.append(f"   **建议**: `{item.get('suggestion', '')}`")
 
     lines.append("\n---\n**指令下达人**: 主编 (Main Editor)")
-    render_markdown_file(lines, output_path)
+    return render_markdown_file(lines, output_path)
 
 
 def render_feedback(data, output_path):
@@ -167,7 +176,7 @@ def render_feedback(data, output_path):
     md.append(f"---")
     md.append(f"**最戳我的一句**: \"{data.get('best_quote', '')}\"")
 
-    render_markdown_file(md, output_path)
+    return render_markdown_file(md, output_path)
 
 
 # ==================== Main ====================
@@ -178,9 +187,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python3 review_toolkit.py --mode critique /path/to/_temp_critique.json
-  python3 review_toolkit.py --mode directive /path/to/_temp_directive.json
-  python3 review_toolkit.py --mode feedback /path/to/_temp_feedback.json
+  python review_toolkit.py --mode critique path/to/_temp_critique.json
+  python review_toolkit.py --mode directive path/to/_temp_directive.json
+  python review_toolkit.py --mode feedback path/to/_temp_feedback.json
 
 JSON 由调用方生成，详见 SKILL.md 中各角色职责说明。
 """
@@ -189,14 +198,23 @@ JSON 由调用方生成，详见 SKILL.md 中各角色职责说明。
     parser.add_argument("input_json", help="输入 JSON 文件路径")
 
     args = parser.parse_args()
+    try:
+        return process_report(args)
+    except (OSError, ValueError, TypeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
 
+
+def process_report(args):
     path = Path(args.input_json)
     if not path.exists():
         print(f"Error: JSON 文件不存在: {path}", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
     with path.open('r', encoding='utf-8') as f:
         data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError("report JSON must be an object")
 
     stem = path.stem
     for p in ['_temp_', 'temp_', 'critique_', 'directive_', 'feedback_']:
@@ -206,14 +224,14 @@ JSON 由调用方生成，详见 SKILL.md 中各角色职责说明。
 
     if args.mode == 'critique':
         out_name = f"[Critique_Report]{stem}.md"
-        render_critique(data, path.parent / out_name)
+        return 0 if render_critique(data, path.parent / out_name) else 1
     elif args.mode == 'directive':
         out_name = f"Directive_{stem}.md"
-        render_directive(data, path.parent / out_name)
+        return 0 if render_directive(data, path.parent / out_name) else 1
     elif args.mode == 'feedback':
         out_name = f"[User_Feedback]{stem}.md"
-        render_feedback(data, path.parent / out_name)
+        return 0 if render_feedback(data, path.parent / out_name) else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

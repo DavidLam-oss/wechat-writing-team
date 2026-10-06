@@ -1,0 +1,8 @@
+interface:
+  display_name: "WeChat Batch Download"
+  short_description: "Batch archive WeChat Official Account articles with verified links and artifacts."
+  brand_color: "#16A34A"
+  default_prompt: "Use $wechat-official-batch-download to build or verify a WeChat Official Account article corpus."
+policy:
+  allow_implicit_invocation: true
+

@@ -4,8 +4,94 @@ import argparse
 import shutil
 import re
 import subprocess
+import sys
 from pathlib import Path
 from datetime import datetime
+
+# 确保同目录脚本可被 import（workspace 共享解析模块）
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from console_encoding import configure_console
+from workspace import resolve_workspace
+from article_assets import plan_asset, prepare_markdown, verify_published
+
+configure_console()
+
+# 36 Official Whitelist Tags for blog and WeChat articles
+WHITELIST_TAGS = {
+    # 知识管理类
+    "Obsidian", "Obsidian入门", "知识管理", "Obsidian插件", "笔记同步", "Web剪藏",
+    # AI与智能体
+    "AI Agent", "AI模型", "Claude Code", "Codex", "WorkBuddy", "OpenClaw", "提示词工程", "MCP",
+    # 效率与工具
+    "效率工具", "自动化", "苹果生态", "终端命令行", "Raycast", "Typeless", "任务管理",
+    # 编程与开源
+    "编程开发", "AI编程", "开源",
+    # 创作与发布
+    "内容创作", "微信公众号", "WeChat Converter", "多平台分发", "排版与导出",
+    # 运维与建站
+    "服务器运维", "SEO与数据分析",
+    # 个人与思考
+    "生活随笔", "个人成长", "职场思考", "复盘与踩坑", "副业与出海",
+}
+
+WHITELIST_OBSIDIAN_SECTIONS = {
+    "first-steps",
+    "basics",
+    "plugins-automation",
+    "advanced-organization",
+    "ai-workflow",
+    "collecting",
+    "sync-backup",
+    "publishing",
+}
+
+
+def validate_frontmatter_rules(fm, title=""):
+    """校验博客/公众号 Frontmatter 规则，返回警告列表。
+
+    1. excerpt：50-100 字（>120 为硬上限）。
+    2. tags：2-4 个，且必须严格取自 36 个官方白名单。
+    3. Obsidian 相关文章：tags 必须含 'Obsidian'；obsidianSection 必须为 8 个合法值之一。
+    """
+    warnings = []
+
+    excerpt = "" if fm.get('excerpt') is None else str(fm.get('excerpt')).strip()
+    excerpt_len = len(excerpt)
+    if excerpt_len > 120:
+        warnings.append(f"⚠️ Excerpt length is {excerpt_len} (>120). Please shorten it in Stage 3.")
+    elif excerpt_len < 50 or excerpt_len > 100:
+        warnings.append(f"⚠️ Excerpt length is {excerpt_len} (expected 50-100 chars for blog frontmatter).")
+
+    raw_tags = fm.get('tags')
+    if not isinstance(raw_tags, list):
+        warnings.append("⚠️ Frontmatter 'tags' must be a list containing 2-4 tags from the whitelist.")
+        tags_list = []
+    else:
+        tags_list = [str(t).strip() for t in raw_tags if str(t).strip()]
+        if not (2 <= len(tags_list) <= 4):
+            warnings.append(f"⚠️ Tags count is {len(tags_list)} (expected 2-4 tags).")
+        invalid_tags = [t for t in tags_list if t not in WHITELIST_TAGS]
+        if invalid_tags:
+            warnings.append(f"⚠️ Invalid tag(s) found: {invalid_tags}. Must be strictly chosen from the 36 official whitelist tags.")
+
+    raw_section = fm.get('obsidianSection', '')
+    obsidian_section = raw_section.strip() if isinstance(raw_section, str) else ''
+
+    is_obsidian_related = (
+        'obsidian' in str(title).lower() or
+        bool(obsidian_section) or
+        any('obsidian' in t.lower() for t in tags_list)
+    )
+
+    if is_obsidian_related and "Obsidian" not in tags_list:
+        warnings.append("⚠️ Obsidian-related article must include 'Obsidian' in tags.")
+
+    if obsidian_section and obsidian_section not in WHITELIST_OBSIDIAN_SECTIONS:
+        allowed_list = sorted(list(WHITELIST_OBSIDIAN_SECTIONS))
+        warnings.append(f"⚠️ Invalid obsidianSection: '{obsidian_section}'. Allowed values: {allowed_list}")
+
+    return warnings
+
 
 def run_obsidian_cmd(args):
     """Run an obsidian CLI command and return success status and output."""
@@ -28,26 +114,31 @@ def run_obsidian_cmd(args):
         return False, ""
 
 def get_obsidian_vault_root(start_path=None):
-    """Get the real Obsidian vault root by looking for the .obsidian configuration folder."""
+    """Get the real Obsidian vault root by looking for the .obsidian configuration folder.
+
+    Walks upward from the given path (default: this script's location) to find a
+    vault. Returns None if no vault is found (instead of wrongly falling back to
+    the workspace root, which would make arbitrary paths appear "in vault")."""
     if start_path is None:
         start_path = Path(__file__).resolve()
     
-    current = start_path
+    current = Path(start_path)
     while current.parent != current:
         if (current / ".obsidian").is_dir():
             return current
         current = current.parent
     
-    # Fallback: Assume repo root is vault root
-    return get_workspace_root().resolve()
+    return None
 
 def get_obsidian_path(abs_path):
     """Convert absolute path to vault-relative path for Obsidian CLI."""
     # Obsidian CLI expects paths RELATIVE to the REAL vault root.
-    vault_root = get_obsidian_vault_root()
+    # The vault is located by walking upward from the target file itself.
+    target_path = Path(abs_path).resolve()
+    vault_root = get_obsidian_vault_root(start_path=target_path)
+    if vault_root is None:
+        return str(abs_path)
     try:
-        # Ensure we are working with absolute resolved paths
-        target_path = Path(abs_path).resolve()
         rel_path = target_path.relative_to(vault_root)
         return str(rel_path)
     except ValueError:
@@ -56,9 +147,12 @@ def get_obsidian_path(abs_path):
 
 def is_obsidian_reachable(file_path):
     """Check if a file path is located within the current Obsidian vault."""
-    vault_root = get_obsidian_vault_root()
+    target_path = Path(file_path).resolve()
+    vault_root = get_obsidian_vault_root(start_path=target_path)
+    if vault_root is None:
+        return False
     try:
-        Path(file_path).resolve().relative_to(vault_root)
+        target_path.relative_to(vault_root)
         return True
     except (ValueError, RuntimeError):
         return False
@@ -75,7 +169,7 @@ def set_obsidian_properties(file_path, properties):
     for key, value in properties.items():
         if value is None: continue
         # Format: property:set name=key value=val path=path
-        val_str = json.dumps(value) if isinstance(value, list) else str(value)
+        val_str = json.dumps(value, ensure_ascii=False) if isinstance(value, list) else str(value)
         
         # Use Obsidian 1.12 syntax: property:set name=... value=... path=...
         cmd_args = ["property:set", f"name={key}", f"value={val_str}", f"path={rel_path}"]
@@ -87,28 +181,15 @@ def set_obsidian_properties(file_path, properties):
             
     return success_count == total_props # Only return True if ALL succeeded
 
-def obsidian_move(src, dest):
-    """Move a file using Obsidian CLI to preserve links."""
-    src_rel = get_obsidian_path(src)
-    dest_rel = get_obsidian_path(dest)
-    
-    # Use Obsidian 1.12 syntax: move path=... to=...
-    ok, err = run_obsidian_cmd(["move", f"path={src_rel}", f"to={dest_rel}"])
-    if not ok:
-        print(f"⚠️ CLI Move failed: {err}")
-    return ok
+def get_workspace_root(source_file=None, explicit=None):
+    """工作区根：显式 > 环境变量 > cwd 结构标记 > source_file 结构标记 > None。
 
-def get_workspace_root():
-    # scripts -> wechat-writer -> Skills -> [RepoRoot] -> parent (contains David-Writing-Team and conductor)
-    # After open-source rename, repo root still has same structure (Skills/ + conductor/)
-    script_dir = Path(__file__).resolve().parent
-    repo_root = script_dir.parent.parent.parent  # Skills/wechat-writer/ -> Skills/ -> repo root
-    return repo_root.parent  # parent containing both the repo dir and conductor/
-
-def get_knowledge_dir():
-    # knowledge/ is at Skills/wechat-writer/knowledge (relative to repo root)
-    skill_root = Path(__file__).resolve().parent.parent  # wechat-writer/
-    return skill_root / "knowledge"
+    不再从脚本自身位置硬推算（技能可能被安装到托管目录，推算结果必然错误）。
+    """
+    root, method = resolve_workspace(source_file=source_file, explicit=explicit)
+    if root:
+        print(f"[Workspace] {root} (via {method})")
+    return root
 
 def sanitize_filename(name):
     return re.sub(r'[<>:"/\\|?*]', '', name).strip()
@@ -118,35 +199,15 @@ def yaml_escape(value):
     text = "" if value is None else str(value)
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
-def to_vault_path(path_value, vault_dir_name):
-    """Normalize path into vault-root based relative path.
-
-    Example: published/img/cover-main.jpg -> Wechat/published/img/cover-main.jpg
-    """
-    raw = "" if path_value is None else str(path_value).strip()
-    if not raw:
-        return ""
-
-    normalized = raw.replace("\\", "/").lstrip("/")
-
-    # Keep explicit URL-like values untouched.
-    if "://" in normalized:
-        return normalized
-
-    prefix = f"{vault_dir_name}/"
-    if normalized.startswith(prefix):
-        return normalized
-
-    return f"{prefix}{normalized}"
-
 def pick_cover_image(img_dir):
     """Pick cover image from archived image folder.
 
     Priority:
-    1. Exact match: cover-combined.jpg
-    2. Exact match: cover-main.jpg
-    3. Partial match: *cover-combined*
-    4. Partial match: *cover-main*
+    1. Exact match: *cover-combined.jpg (old naming)
+    2. Exact match: *cover-main.jpg (old naming)
+    3. Partial match: *_cover-combined*
+    4. Partial match: *_cover-main*
+    （子串匹配对新命名 {prefix}_cover-*.jpg 与旧命名 cover-*.jpg 均兼容）
     """
     if not img_dir.exists() or not img_dir.is_dir():
         return None
@@ -159,7 +220,7 @@ def pick_cover_image(img_dir):
             return f
 
     # 2. Fallback to sorting and partial match
-    image_exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+    image_exts = {".jpg", ".jpeg", ".png", ".webp"}
     image_files = sorted(
         [
             p for p in img_dir.iterdir()
@@ -171,7 +232,7 @@ def pick_cover_image(img_dir):
     if not image_files:
         return None
 
-    priorities = ("cover-combined", "cover-main")
+    priorities = ("_cover-combined", "cover-combined", "_cover-main", "cover-main")
     for keyword in priorities:
         for file_path in image_files:
             if keyword in file_path.name.lower():
@@ -179,22 +240,32 @@ def pick_cover_image(img_dir):
 
     return None
 
-def update_index(title, excerpt, filename):
+def update_index(title, excerpt, filename, workspace_root=None):
     """
-    更新 published_article_index.md
+    更新 published_article_index.md（运行数据，位于工作区 conductor/）
     - title: 文章标题（用于 Obsidian Wiki Link 和显示）
     - excerpt: 摘要
     - filename: 实际保存的文件名（不含扩展名），暂不使用
+    - workspace_root: 工作区根；缺失时拒绝更新，避免写入技能目录
     """
-    index_path = get_knowledge_dir() / "published_article_index.md"
+    if not workspace_root:
+        raise RuntimeError("workspace_root is required; published index belongs to workspace/conductor")
+    index_path = workspace_root / "conductor" / "published_article_index.md"
+    index_path.parent.mkdir(parents=True, exist_ok=True)
     if not index_path.exists():
-        print(f"Warning: Index file {index_path} not found.")
-        return
+        print(f"Creating index file: {index_path}")
+        index_path.write_text(
+            "# 已发布文章索引 (Published Article Index)\n\n"
+            "> 运行数据：由 archive.py 自动维护。\n\n",
+            encoding='utf-8'
+        )
 
     # Obsidian Wiki Link: 使用纯标题格式 [[标题]]
     link = f"[[{title}]]"
 
-    line = f"| {link} | {excerpt} |"
+    # 归档索引是 Markdown 表格，摘要中的竖线和换行必须转义，否则会破坏表格结构。
+    safe_excerpt = " ".join(str(excerpt or "").replace("|", "\\|").splitlines()).strip()
+    line = f"| {link} | {safe_excerpt} |"
     month_header = f"## {datetime.now().strftime('%Y-%m')}"
 
     try:
@@ -202,23 +273,31 @@ def update_index(title, excerpt, filename):
         # Avoid duplicates (can happen if index update logic changes or a rerun occurs).
         if link in content:
             print(f"Index already contains entry: {link}")
-            return
+            return True
 
         lines = content.splitlines()
 
         if month_header not in content:
             # Create new month section at the TOP (before first existing month)
             # Find the first '## YYYY-MM' line (month header)
-            insert_pos = 0
+            insert_pos = len(lines)  # First month follows the introductory heading/notes.
             for i, l in enumerate(lines):
                 if l.strip().startswith('## 20'):  # Match '## 2025-xx' or '## 2026-xx'
                     insert_pos = i
                     break
 
-            new_section = f"\n{month_header}\n\n| 标题 | 摘要 |\n| --- | --- |\n{line}\n"
-            lines.insert(insert_pos, new_section)
+            new_section = [
+                "",
+                month_header,
+                "",
+                "| 标题 | 摘要 |",
+                "| --- | --- |",
+                line,
+            ]
+            lines[insert_pos:insert_pos] = new_section
             index_path.write_text('\n'.join(lines), encoding='utf-8')
             print(f"Created new month section at top: {index_path}")
+            return True
         else:
             # Insert after the table header for the month section.
             for i, l in enumerate(lines):
@@ -236,14 +315,16 @@ def update_index(title, excerpt, filename):
                         lines.insert(j + 2, line)
                         index_path.write_text('\n'.join(lines), encoding='utf-8')
                         print(f"Updated index: {index_path}")
-                        return
+                        return True
 
             # If header found but table structure not found (rare), append in-place under the header.
             with index_path.open('a', encoding='utf-8') as f:
                  f.write(f"\n{line}\n")
+            return True
 
     except Exception as e:
         print(f"Error updating index: {e}")
+        return False
 
 def strip_frontmatter(content):
     if content.startswith("---\n"):
@@ -329,26 +410,34 @@ def strip_draft_metadata(content):
             # 遇到正文了，还没遇到分隔线？
             # 这种情况下，也许没有分隔线，只是引用块结束。
             # 为了安全，只在有分隔线的情况下才删除？
-            # 或者，只要确认是元数据块，就删除引用块部分。
-            # 按照 io_schema，Draft 头部通常有 ---。
-            # 这里采取激进但基于内容的策略：只要确认是元数据块，就删除到当前位置。
-            delete_end_index = j
-            break
+            # 没有明确分隔线时不删除，避免把正文首段误判为元信息。
+            return content
 
     return '\n'.join(lines[delete_end_index:])
 
-def process_archive(data):
+def process_archive(data, explicit_workspace=None):
+    if not data.get('source_file'):
+        print("❌ source_file is required")
+        return 2
     source_file = Path(data.get('source_file', ''))
     fm = data.get('frontmatter', {})
 
+    # --- Workspace Resolution ---
+    # 显式参数 > 环境变量 > cwd 结构标记 > source_file 结构标记
+    workspace_root = get_workspace_root(
+        source_file=str(source_file) if source_file else None,
+        explicit=explicit_workspace or data.get('workspace_root'),
+    )
+    if workspace_root is None:
+        print("❌ 无法定位工作区根。请通过 --workspace 显式指定，或在 JSON 中提供 workspace_root 字段。")
+        return 2
+
     # --- Security Validation (Move to top) ---
-    # Ensure source file is inside 'To-be-used/Project_*' before reading/writing anything.
-    workspace_root = get_workspace_root()
-    workspace_name = workspace_root.name
+    # Ensure source file is inside 'articles/Project_*' before reading/writing anything.
 
     if source_file.exists():
         project_dir = source_file.parent
-        allowed_parent = (workspace_root / "To-be-used").resolve()
+        allowed_parent = (workspace_root / "articles").resolve()
         try:
             current_parent = project_dir.parent.resolve()
         except Exception:
@@ -357,76 +446,80 @@ def process_archive(data):
         if current_parent != allowed_parent:
              print(f"⚠️ Security Violation: Source file is in '{current_parent}', but must be in '{allowed_parent}' to be archived.")
              print("   Operation aborted to prevent unauthorized access or data loss.")
-             return
+             return 2
     else:
-        # If file doesn't exist, we can't validate its path context properly relative to Project dir,
-        # but the script later handles non-existent files.
-        # However, for safety, let's just warn if we can't determine context.
-        pass
+        print("❌ Source draft does not exist; publication aborted")
+        return 2
 
     title = fm.get('title', 'Untitled')
     safe_title = sanitize_filename(title)
     
-    workspace_root = get_workspace_root()
     target_dir = workspace_root / "published"
     target_dir.mkdir(parents=True, exist_ok=True)
     
     target_file = target_dir / f"{safe_title}.md"
     
     # Read & Clean
-    if source_file.exists():
-        content = source_file.read_text(encoding='utf-8')
-        content = strip_frontmatter(content)
-        content = strip_h1_title(content)
-        content = strip_draft_metadata(content)
-    else:
-        content = ""
-        print(f"Warning: Source file {source_file} not found. Creating empty published file.")
+    content = source_file.read_text(encoding='utf-8')
+    content = strip_frontmatter(content)
+    content = strip_h1_title(content)
+    content = strip_draft_metadata(content)
 
-    # Move img/ folder to published/ and resolve cover path.
+    # Resolve Markdown references against the source project, then copy the files.
+    try:
+        content, asset_plans = prepare_markdown(content, source_file.parent)
+        selected_cover = (fm.get('cover') or '').strip()
+        if not selected_cover:
+            selected = pick_cover_image(source_file.parent / "zpicture.assets")
+            selected_cover = f"zpicture.assets/{selected.name}" if selected else ""
+        if selected_cover:
+            cover_plan = plan_asset(selected_cover, source_file.parent, allow_legacy_cover=True)
+            if cover_plan:
+                cover_source, selected_cover = cover_plan
+                asset_plans[selected_cover] = cover_source
+    except (OSError, ValueError) as exc:
+        print(f"❌ Article assets incomplete; publication aborted: {exc}")
+        return 1
+
+    # Copy zpicture.assets/ folder to published/ and resolve cover path.
     # Keep explicit cover if provided by upstream input.
-    cover_path = to_vault_path(fm.get('cover', ''), workspace_name)
+    # 项目目录（articles/Project_[Title]/）保留原位，不再移动归档。
+    # cover 字段使用相对 published 文件的路径（如 zpicture.assets/cover-combined.jpg），
+    # 不附加 vault 目录名前缀，保证 Obsidian 能正确解析。
+    cover_path = selected_cover
     excerpt = "" if fm.get('excerpt') is None else str(fm.get('excerpt')).strip()
-    if len(excerpt) > 120:
-        print(f"⚠️ Excerpt length is {len(excerpt)} (>120). Please shorten it in Stage 3.")
+    for warning in validate_frontmatter_rules(fm, title):
+        print(warning)
     if source_file.exists():
         project_dir = source_file.parent
-        img_dir = project_dir / "img"
+        img_dir = project_dir / "zpicture.assets"
 
         if img_dir.exists() and img_dir.is_dir():
             # Keep fixed output directory name for plugin config compatibility.
-            img_dest = target_dir / "img"
-
+            img_dest = target_dir / "zpicture.assets"
             try:
-                # Preserve previous published/img if present, then replace with new one.
-                if img_dest.exists():
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    backup = target_dir / f"img_prev_{timestamp}"
-                    counter = 1
-                    while backup.exists():
-                        backup = target_dir / f"img_prev_{timestamp}_{counter}"
-                        counter += 1
-                    shutil.move(str(img_dest), str(backup))
-                    print(f"📦 Existing published/img moved to backup: {backup}")
+                # 合并复制：所有文章的图片共存于同一 published/zpicture.assets。
+                # 图片来源为当前项目目录（articles/Project_[Title]/zpicture.assets），
+                # 图片命名带文章标题前缀，跨文章不重名；同名文件更新（重发覆盖），异名文件保留。
+                # 不再使用 zpicture_prev_* 备份挤压（旧逻辑会导致旧文章图片断链与目录堆积）。
+                shutil.copytree(str(img_dir), str(img_dest), dirs_exist_ok=True)
+                print(f"🖼️  Merged images into: {img_dest}")
 
-                shutil.move(str(img_dir), str(img_dest))
-                print(f"🖼️  Moved images to: {img_dest}")
-
-                # Auto-pick only when cover was not explicitly provided.
-                if not cover_path:
-                    cover_file = pick_cover_image(img_dest)
-                    if cover_file:
-                        relative_path = cover_file.relative_to(workspace_root).as_posix()
-                        cover_path = to_vault_path(relative_path, workspace_name)
-                        print(f"🖼️  Cover selected: {cover_path}")
-                    else:
-                        print("⚠️ No cover-combined/cover-main found. cover stays empty.")
-                else:
-                    print(f"ℹ️ Keep explicit cover from input: {cover_path}")
             except Exception as e:
-                # Non-blocking: publish text first even if image move fails.
-                print(f"⚠️ Image archive failed, continue without auto cover: {e}")
+                print(f"❌ Image archive failed; publication aborted: {e}")
+                return 1
     
+    try:
+        for destination, original in asset_plans.items():
+            target = target_dir / destination
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if not target.exists() or not original.is_relative_to(source_file.parent / "zpicture.assets"):
+                shutil.copy2(original, target)
+        verify_published(content, target_dir, cover_path)
+    except (OSError, ValueError) as exc:
+        print(f"❌ Published image links incomplete; publication aborted: {exc}")
+        return 1
+
     # Generate properties dict
     props = {
         "title": title,
@@ -437,6 +530,12 @@ def process_archive(data):
         "tags": fm.get('tags', []),
         "status": "published"
     }
+    # 可选：透传 obsidianSection（Obsidian 专题页归类）。
+    # 仅当来源 frontmatter 提供了合法值时写入，避免非 Obsidian 文章被空字段污染。
+    obsidian_section = fm.get('obsidianSection', '')
+    obsidian_section = obsidian_section.strip() if isinstance(obsidian_section, str) else ''
+    if obsidian_section:
+        props["obsidianSection"] = obsidian_section
 
     # Write & Update Properties
     # If Obsidian CLI is available, we attempt CLI-Native update
@@ -457,14 +556,18 @@ def process_archive(data):
     if not cli_success:
         # Legacy / Fallback: Manual YAML-like construction
         # This is the 'Source of Truth' for metadata safety.
+        obsidian_section_line = (
+            f'obsidianSection: "{yaml_escape(props["obsidianSection"])}"\n'
+            if props.get("obsidianSection") else ""
+        )
         new_content = f"""---
 title: "{yaml_escape(title)}"
 date: "{props['date']}"
 slug: "{yaml_escape(props['slug'])}"
 excerpt: "{yaml_escape(props['excerpt'])}"
 cover: "{yaml_escape(props['cover'])}"
-tags: {json.dumps(props['tags'])}
-status: published
+tags: {json.dumps(props['tags'], ensure_ascii=False)}
+{obsidian_section_line}status: published
 ---
 {content}"""
         target_file.write_text(new_content, encoding='utf-8')
@@ -475,72 +578,52 @@ status: published
     
     # Update Index
     # Pass filename (without extension) for Obsidian Wiki Link
-    update_index(title, excerpt, safe_title)
+    try:
+        index_ok = update_index(title, excerpt, safe_title, workspace_root=workspace_root)
+    except (OSError, ValueError) as exc:
+        print(f"❌ Index update error: {exc}")
+        index_ok = False
+    if not index_ok:
+        print("❌ Article and images saved, but index update failed. Retry the index update; publication is incomplete.")
+        return 1
 
-    # Archive Project Folder
+    # Project Folder 保留原位
+    # 项目目录（articles/Project_[Title]/）不再移动归档，继续保留过程文件、草稿与图片；
+    # conductor/archive/ 不再由本脚本创建或写入，发布副本仅位于 published/。
     if source_file.exists():
-        project_dir = source_file.parent
+        print(f"📁 Project retained at: {source_file.parent} (articles 保留，不再归档到 conductor/archive)")
 
-        # Safety: only move well-formed project folders.
-        if "Project_" in project_dir.name:
-            archive_base = workspace_root / "conductor" / "archive"
-            archive_base.mkdir(parents=True, exist_ok=True)
-
-            today = datetime.now().strftime('%Y%m%d')
-            # Strip 'Project_' prefix (case-insensitive) for cleaner archive name
-            clean_name = re.sub(r'^project_', '', project_dir.name, flags=re.IGNORECASE)
-            archive_dest = archive_base / f"{today}_{sanitize_filename(clean_name)}"
-
-            # Handle name collision by adding suffix
-            if archive_dest.exists():
-                counter = 1
-                while archive_dest.exists():
-                    archive_dest = archive_base / f"{today}_{sanitize_filename(clean_name)}_{counter}"
-                    counter += 1
-
-            # Use Obsidian CLI move to preserve links if available
-            if cli_ok and is_obsidian_reachable(project_dir):
-                # IMPORTANT: Move folder via CLI file-by-file since CLI only supports file moves
-                print(f"📦 Archiving project via CLI: {project_dir.name} -> {archive_dest.name}")
-                archive_dest.mkdir(parents=True, exist_ok=True)
-                
-                cli_success = True
-                for item in project_dir.rglob('*'):
-                    if item.is_file():
-                        rel_path = item.relative_to(project_dir)
-                        target_item = archive_dest / rel_path
-                        target_item.parent.mkdir(parents=True, exist_ok=True)
-                        if not obsidian_move(item, target_item):
-                            cli_success = False
-                            # Fallback for individual file if CLI fails
-                            shutil.move(str(item), str(target_item))
-                
-                if cli_success:
-                    print(f"📦 Archived project to: {archive_dest} (CLI-Native)")
-                else:
-                    print(f"📦 Archived project to: {archive_dest} (Partial CLI/Fallback)")
-                
-                # Cleanup source directory
-                try:
-                    shutil.rmtree(str(project_dir))
-                except Exception as e:
-                    print(f"⚠️ Failed to remove source folder after move: {e}")
-            else:
-                shutil.move(str(project_dir), str(archive_dest))
-                print(f"📦 Archived project to: {archive_dest} (Legacy-Mode)")
-        elif project_dir.name == "To-be-used":
-            # Inside To-be-used but not in a Project folder
-            print("⚠️ Source file not in 'Project_*' folder, skipping project archive.")
-        else:
-            print("⚠️ Source file not in 'To-be-used' or 'Project_*' folder, skipping project archive.")
-        
-    # Memory Suggestion
-    print("\n🧠 **Memory Suggestion** (Please update knowledge/team_memory.md):")
-    print(f"- [{datetime.now().strftime('%Y-%m-%d')}] [Experience] Completed {title}.")
+    # Memory Suggestion: display a confirmation card; never write silently.
+    suggestion = f"- [{datetime.now().strftime('%Y-%m-%d')}] [Experience] Completed {title}."
+    pending_path = workspace_root / "conductor" / "pending_memory_suggestions.json"
+    pending_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        pending = json.loads(pending_path.read_text(encoding="utf-8")) if pending_path.exists() else []
+        if not isinstance(pending, list):
+            pending = []
+    except Exception:
+        pending = []
+    pending.append({
+        "id": f"memory-{datetime.now().strftime('%Y%m%d%H%M%S')}-{safe_title}",
+        "title": title,
+        "suggestion": suggestion,
+        "status": "pending",
+        "created_at": datetime.now().isoformat(),
+    })
+    pending_path.write_text(json.dumps(pending, ensure_ascii=False, indent=2), encoding="utf-8")
+    print("\n🧠 团队记忆建议（尚未写入 team_memory.md）")
+    print(suggestion)
+    print(f"待确认记录：{pending_path}")
+    print("请选择：")
+    print("1. 写入 knowledge/team_memory.md")
+    print("2. 暂不写入")
+    print("3. 修改后再写入")
+    return 0
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_json")
+    parser.add_argument("--workspace", help="工作区根目录（显式指定，可规避自动检测歧义）")
     args = parser.parse_args()
 
     try:
@@ -558,10 +641,13 @@ def main():
             if not source_path.is_absolute():
                 data['source_file'] = str(json_dir / source_path)
             # else: absolute path — use as-is
+        if data.get('workspace_root') and not Path(data['workspace_root']).is_absolute():
+            data['workspace_root'] = str(json_dir / data['workspace_root'])
 
-        process_archive(data)
+        return process_archive(data, explicit_workspace=args.workspace)
     except Exception as e:
         print(f"Error: {e}")
+        return 1
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

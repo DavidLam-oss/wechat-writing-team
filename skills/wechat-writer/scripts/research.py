@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 import json
 import argparse
+import sys
 from pathlib import Path
 from datetime import datetime
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from console_encoding import configure_console
+
+configure_console()
 
 def clean_text(text):
     if not isinstance(text, str): return str(text)
@@ -53,7 +59,7 @@ def render_markdown(data, output_path):
             verdict_fmt = f"**{verdict_norm}**"
             # Only add truth if it's a correction. 
             # Logic: If it's NOT "Verified" (or equivalent), show truth.
-            if "Verified" not in verdict_raw and "验证通过" not in verdict_norm: 
+            if verdict_norm != "[验证通过]":
                 if truth: verdict_fmt += f" {truth}"
             
             md.append(f"| {claim} | {verdict_fmt} | {escape_table_cell(source)} |")
@@ -63,7 +69,7 @@ def render_markdown(data, output_path):
         output_path.write_text('\n'.join(md), encoding='utf-8')
         print(f"Successfully generated report at: {output_path}")
     except IOError as e:
-        print(f"Error writing output file: {e}")
+        raise OSError("Unable to write research report") from e
 
 def main():
     parser = argparse.ArgumentParser()
@@ -71,7 +77,7 @@ def main():
     args = parser.parse_args()
 
     input_path = Path(args.input_json)
-    if not input_path.exists(): return
+    if not input_path.exists(): return 2
 
     try:
         with input_path.open('r', encoding='utf-8') as f:
@@ -82,9 +88,11 @@ def main():
         output_path = input_path.parent / output_filename
         
         render_markdown(data, output_path)
+        return 0
 
     except Exception as e:
         print(f"Error: {e}")
+        return 1
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

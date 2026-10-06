@@ -1,0 +1,4 @@
+interface:
+  display_name: "WeChat Writer"
+  short_description: "Create, review, and prepare complete WeChat articles."
+  default_prompt: "Use $wechat-writer to write and prepare a complete Markdown article in published/."

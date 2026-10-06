@@ -11,10 +11,11 @@
 *   **不存放 SOP**: 具体的操作步骤 (Routine) 请放入 `Skills/<skill-name>/references/`。
 
 ## 📂 文档列表
+0.  **`account_positioning.md`**: **账号定位卡**。这个号是谁、写给谁、写什么、不写什么；选题与剪藏分拣共用的唯一判据（含「热点嫁接四问」）。随仓库分发的为**模板**，需按自己的账号替换方括号占位内容。
 1.  **`style_guide_david.md`**: 大卫个人写作风格指南 (平和、自然、从容)。
 2.  **`ai_smell_guide.md`**: 降 AI 味操作指南与必删词表。
-3.  **`team_memory.md`**: 团队长期记忆与动态规则 (由鲁迅自动更新)。
-4.  **`published_article_index.md`**: 历史文章索引 (用于内链推荐)。
+3.  **`team_memory.md`**: 团队长期记忆与动态规则。
+4.  **`published_article_index.md`**: 历史文章索引 (用于内链推荐)。运行时索引由 `archive.py` 维护在工作区 `conductor/published_article_index.md`；本目录内的为示例。
 5.  **`素材库.md`**: 私有灵感、金句、碎片观察和原始选题池。
 6.  **`seeds/`**: 结构化外部素材库。只存已经证明有复用价值的长期 Seed。
 

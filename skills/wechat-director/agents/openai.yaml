@@ -1,0 +1,4 @@
+interface:
+  display_name: "WeChat Director"
+  short_description: "Design WeChat storyboards and generate article images."
+  default_prompt: "Use $wechat-director to create and validate images for a finalized WeChat article."

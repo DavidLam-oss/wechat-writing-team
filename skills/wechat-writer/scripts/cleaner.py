@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 import json
 import argparse
+import sys
 from pathlib import Path
 from datetime import datetime
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from console_encoding import configure_console
+
+configure_console()
 
 def save_markdown(data, output_path):
     """
@@ -20,16 +26,18 @@ def save_markdown(data, output_path):
     lines.append(f"created: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     lines.append("---")
     lines.append("")
-    lines.append(f"# Cleaned Source\n")
+    lines.append("# Cleaned Source")
     lines.append(content)
 
     # Write to file
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text('\n'.join(lines), encoding='utf-8')
         print(f"Successfully saved cleaned text to: {output_path}")
+        return True
     except IOError as e:
-        print(f"Error writing output file: {e}")
+        print(f"Error writing output file: {e}", file=sys.stderr)
+        return False
 
 def main():
     parser = argparse.ArgumentParser(description="Save Cleaned Text from JSON")
@@ -39,11 +47,13 @@ def main():
     input_path = Path(args.input_json)
     if not input_path.exists():
         print(f"Error: Input file '{input_path}' not found.")
-        return
+        return 1
 
     try:
         with input_path.open('r', encoding='utf-8') as f:
             data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError("cleaning JSON must be an object")
 
         source_file_path = Path(data.get('source_file', 'Raw_Material.txt'))
         
@@ -66,10 +76,11 @@ def main():
         # Use input_json parent as the base for output, assuming input_json is in the project dir.
         output_path = input_path.parent / output_filename
         
-        save_markdown(data, output_path)
+        return 0 if save_markdown(data, output_path) else 1
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

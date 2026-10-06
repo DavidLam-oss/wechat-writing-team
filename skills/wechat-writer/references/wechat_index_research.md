@@ -27,8 +27,6 @@
 
 先以文章**核心主题词**作为种子词，去微信指数搜索。
 
-**💡 推荐工具**: 安装 [`wechat-index-query`](https://github.com/mileson/wechat-index-query) Skill（仅支持 macOS，使用前需手动打开微信指数小程序）。
-
 如果第一轮没有命中合适词，继续扩展：
 
 1. 同义需求词
