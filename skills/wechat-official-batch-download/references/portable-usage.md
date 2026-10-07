@@ -51,6 +51,8 @@ export DWT_PRIVATE_PROXY_HOSTS="proxy-a.example.com,proxy-b.example.com"
 
 Hosts listed here are substring-matched and tried before the shared pool.
 
+If no proxy is usable at all — the pool file is missing or empty, or every proxy in it fails — the downloader degrades to a direct request for that URL rather than aborting the batch, so a partially healthy pool never blocks a run.
+
 ## Expected Output Layout
 
 Use this shape unless the user specifies another output root:

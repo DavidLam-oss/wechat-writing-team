@@ -1,7 +1,7 @@
 ---
 name: wechat-official-batch-download
 description: Use this skill when the user wants to batch download, archive, verify, or build a corpus from WeChat Official Account articles, or needs to fetch articles as writing references. Especially when using mp.weixin.qq.com links, down.mptext.top/dashboard, wechat-article-exporter, exported Excel/JSON link pools, or a local downloader/MCP. It teaches the agent to acquire official article URLs first, preserve raw HTML/Markdown/images/metadata, verify counts and fidelity, and avoid storing cookies, auth keys, or login secrets.
-version: 1.2.0
+version: 1.2.1
 ---
 
 # WeChat Official Batch Download
@@ -139,7 +139,7 @@ No local image download, no image folder, no cleanup needed after reference use.
 This skill does not assume one fixed workstation. Use the best available local equivalent:
 
 - **Local Python Scripts**:
-  - `scripts/downloader.py`: Multi-threaded downloader. Supports **direct connection (default)** with high-fidelity Chrome UA to bypass hotlinking block, and optional CF Worker proxy pool (`--proxy`). Supports request throttling (`--delay`) and authentication (`--cookie`).
+  - `scripts/downloader.py`: Multi-threaded downloader. Uses a **direct connection by default** with a high-fidelity Chrome UA to bypass the hotlinking block; the CF Worker proxy pool is opt-in via `--proxy`. With no proxy available (pool file missing or empty) it also falls back to a direct request, and if every proxy attempt fails it retries once directly instead of aborting the batch. Supports request throttling (`--delay`) and authentication (`--cookie`).
   - `scripts/exporters/md_exporter.py`: Exporter converting raw HTML to preserved Markdown.
   - `scripts/exporters/html_exporter.py`: Exporter normalizing HTML into clean, offline-friendly single files via `no-referrer` metadata injection and protocol-relative stylesheet link corrections (`https:` prefixing).
 - local Python/Node downloader
@@ -157,6 +157,7 @@ If no downloader exists, create a small local script only after the link pool is
 
 ## Changelog
 
+- **v1.2.1 (2026-10-07)**: Fixed the `--proxy` toggle, which was a no-op: `Downloader.__init__` rebuilt a `ProxyManager` whenever it was passed `None`, so the pool was loaded even without the flag and the documented "direct by default" behaviour never took effect. Now `None` really means direct, and when the pool is used but every attempt fails the downloader retries once directly instead of aborting the batch.
 - **v1.2.0 (2026-06-27)**: Disabled CF Worker proxy pool by default. Reconfigured downloader to prioritize direct HTTPS requests using browser User-Agent. Added `--proxy` toggle, `--delay` throttling, and `--cookie` authorization parameters.
 - **v1.1.0 (2026-06-27)**: Added local Python proxy pool downloader and Markdown/HTML exporters. Kept images and stylesheets on WeChat CDN and injected `no-referrer` meta to bypass hotlinking block, ensuring clean single-file structures.
 - **v1.0.0**: Initial release of the batch download skill specification.

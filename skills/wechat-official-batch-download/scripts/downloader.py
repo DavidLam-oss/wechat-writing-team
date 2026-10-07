@@ -153,7 +153,9 @@ class ProxyManager:
 
 class Downloader:
     def __init__(self, proxy_manager: ProxyManager = None, timeout: float = 30.0):
-        self.proxy_manager = proxy_manager or ProxyManager()
+        # None means "no proxy pool" -> direct connection, which is the default.
+        # The CF Worker pool is opt-in via the CLI flag --proxy.
+        self.proxy_manager = proxy_manager
         self.timeout = timeout
         try:
             self.ssl_context = ssl._create_unverified_context()
@@ -169,9 +171,15 @@ class Downloader:
         except Exception:
             return False
 
+    def _download_direct(self, url: str, headers: Dict[str, str]) -> Tuple[bytes, Optional[str]]:
+        """Issue a direct HTTPS request to the target host (no proxy involved)."""
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=self.timeout, context=self.ssl_context) as response:
+            return response.read(), None
+
     def download(self, url: str, headers: Dict[str, str] = None) -> Tuple[bytes, Optional[str]]:
         """
-        Downloads a WeChat article through a proxy worker.
+        Downloads a WeChat article, directly or through a proxy worker.
         Returns: Tuple of (html_bytes, proxy_used)
         """
         if not self.is_valid_url(url):
@@ -181,14 +189,12 @@ class Downloader:
         if 'User-Agent' not in headers:
             headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
-        proxy = self.proxy_manager.get_best_proxy()
+        proxy = self.proxy_manager.get_best_proxy() if self.proxy_manager else None
         
         if not proxy:
-            # Fallback to direct download if no proxy is loaded
-            logger.info("No proxy configured. Downloading directly.")
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=self.timeout, context=self.ssl_context) as response:
-                return response.read(), None
+            # Direct connection: no proxy pool requested, or the pool is empty / its file is missing.
+            logger.info("No proxy available. Downloading directly.")
+            return self._download_direct(url, headers)
 
         # Build proxy URL
         params = {
@@ -223,7 +229,16 @@ class Downloader:
                     params['url'] = url
                     proxy_url = f"{proxy}?{urllib.parse.urlencode(params)}"
 
-        raise RuntimeError(f"Failed to download article after 3 attempts. Last error: {last_error}")
+        # Every proxy attempt failed. Degrade gracefully instead of aborting the batch:
+        # try one direct request before giving up on this URL.
+        logger.warning(f"All proxy attempts failed (last error: {last_error}). Falling back to a direct download.")
+        try:
+            return self._download_direct(url, headers)
+        except Exception as direct_error:
+            raise RuntimeError(
+                f"Failed after 3 proxy attempts and a direct fallback. "
+                f"Proxy error: {last_error}. Direct error: {direct_error}"
+            ) from direct_error
 
 
 def sanitize_filename(name: str) -> str:
