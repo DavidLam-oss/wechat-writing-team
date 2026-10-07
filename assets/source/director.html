@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:#fff}
+  body{
+    width:1400px;background:#fff;color:#14161A;
+    padding:38px 40px 34px;
+    font-family:'PingFang SC','Hiragino Sans GB','Heiti SC',-apple-system,'Segoe UI',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  code{font-family:'SF Mono','JetBrains Mono','Menlo',monospace;font-size:.94em}
+
+  /* ---------- header ---------- */
+  .hd h1{font-size:42px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+  .hd h1 .ver{color:#D9820B}
+  .hd .sub{font-size:21px;color:#2B313B;margin-top:8px;font-weight:600}
+  .hd .goal{font-size:15px;color:#6E7A8A;margin-top:9px}
+
+  /* ---------- generic section ---------- */
+  .sec{margin-top:18px}
+  .sec > .slabel{font-size:17px;font-weight:700;color:#14161A;margin-bottom:9px}
+  .sec > .slabel .dim{color:#93A0B0;font-weight:600}
+
+  /* ---------- mission ---------- */
+  .mission{
+    margin-top:16px;display:flex;gap:12px;align-items:baseline;
+    background:#FFF6F9;border:1px solid #F9CDDD;border-left:5px solid #C2185B;
+    border-radius:10px;padding:13px 18px;font-size:14.5px;color:#3A2430;line-height:1.55;
+  }
+  .mission .mlabel{color:#C2185B;font-weight:700;flex:none}
+  .mission b{color:#14161A}
+
+  /* ---------- timing row ---------- */
+  .timing{display:flex;gap:12px}
+  .tm{
+    flex:1;border-radius:9px;padding:10px 14px;border:1px solid;
+    display:flex;flex-direction:column;gap:4px;background:#fff;
+  }
+  .tm .tt{font-size:14px;font-weight:700}
+  .tm .t1{font-size:11.5px;color:#3D4450}
+  .tm .t2{font-size:11px;color:#8A95A4}
+  .tm-orange{border-color:#F7D9A6;background:#FFFCF6} .tm-orange .tt{color:#C2760A}
+  .tm-blue{border-color:#C7DAFF;background:#F9FBFF}   .tm-blue .tt{color:#3B5BDB}
+  .tm-red{border-color:#F7C6CE;background:#FFFBFB}    .tm-red .tt{color:#CE3244}
+
+  /* ---------- step cards ---------- */
+  .cards{display:flex;align-items:stretch;gap:0}
+  .arw{flex:none;width:15px;display:flex;align-items:center;justify-content:center;
+       color:#C2CBD8;font-size:16px;line-height:1}
+  .card{
+    flex:1;min-width:0;border:1.4px solid;border-radius:10px;
+    padding:11px 13px 10px;display:flex;flex-direction:column;
+  }
+  .chead{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+  .cstage{font-size:11.5px;font-weight:700;letter-spacing:.02em}
+  .crole{font-size:11.5px;color:#4C5666;font-weight:600}
+  .cbody{font-size:11.5px;color:#39424F;line-height:1.62;flex:1}
+  .cbody li{list-style:none;padding-left:11px;position:relative}
+  .cbody li::before{content:"·";position:absolute;left:2px;color:#AEB8C6;font-weight:700}
+  .cout{margin-top:9px;padding-top:8px;border-top:1px dashed #E3E7EE;font-size:10.5px;color:#8A95A4}
+  .cout code{color:#243043;background:#F3F5F8;padding:1px 5px;border-radius:3px;white-space:nowrap}
+  .k-purple{border-color:#D3C7FF;background:#FDFCFF} .k-purple .cstage{color:#6E56CF}
+  .k-blue{border-color:#C7DAFF;background:#FBFCFF}   .k-blue .cstage{color:#3B5BDB}
+  .k-green{border-color:#BEEAD6;background:#FBFFFD}  .k-green .cstage{color:#0E9464}
+  .k-orange{border-color:#F8DDB0;background:#FFFDF8} .k-orange .cstage{color:#C2760A}
+
+  /* ---------- key nodes ---------- */
+  .nodes{display:flex;gap:12px}
+  .node{
+    flex:1;border-radius:8px;border:1px solid #E3E7EE;background:#FAFBFD;
+    padding:9px 13px;display:flex;flex-direction:column;gap:3px;
+  }
+  .node b{font-size:12.5px;font-weight:700;color:#243043}
+  .node span{font-size:11px;color:#7A8494}
+
+  /* ---------- specs ---------- */
+  .specs{display:flex;gap:12px}
+  .spec{flex:1;border-radius:9px;border:1px solid;padding:10px 14px;
+        display:flex;flex-direction:column;gap:4px}
+  .spec .sh{font-size:13.5px;font-weight:700}
+  .spec .sx{font-size:11.5px;color:#4C5666;line-height:1.58}
+  .sp-purple{border-color:#D3C7FF;background:#FBF9FF} .sp-purple .sh{color:#6E56CF}
+  .sp-blue{border-color:#C7DAFF;background:#F9FBFF}   .sp-blue .sh{color:#3B5BDB}
+  .sp-green{border-color:#BEEAD6;background:#F8FDFB}  .sp-green .sh{color:#0E9464}
+
+  /* ---------- footer ---------- */
+  .foot{margin-top:18px;display:flex;gap:10px;align-items:baseline;font-size:14px}
+  .foot .fl{font-weight:700;color:#14161A;flex:none}
+  .foot .fx{color:#3D4450;font-family:'SF Mono','JetBrains Mono','Menlo',monospace;font-size:13px}
+  .foot .fx .hl{color:#D9820B;font-weight:700}
+</style>
+</head>
+<body>
+
+  <div class="hd">
+    <h1>WeChat Director <span class="ver">v2.5.1</span></h1>
+    <p class="sub">视觉导演系统：文章配图与电影感分镜流程</p>
+    <p class="goal">目标：不是说明书截图，而是为文章补上意境、情绪和视觉呼吸。</p>
+  </div>
+
+  <div class="mission">
+    <span class="mlabel">核心使命</span>
+    <span><b>张艺谋负责视觉导演</b>：Flat Vector Illustration + Sticker Style。红色圆框眼镜、光头、山羊胡、白色描边是 IP 一致性锚点。</span>
+  </div>
+
+  <div class="sec">
+    <div class="slabel">① 运行时机</div>
+    <div class="timing">
+      <div class="tm tm-orange">
+        <span class="tt">推荐时机</span>
+        <span class="t1">文章定稿后（writer Stage 4 归档前）</span>
+        <span class="t2">默认输出到项目 <code>zpicture.assets/</code></span>
+      </div>
+      <div class="tm tm-blue">
+        <span class="tt">输入对象</span>
+        <span class="t1">已定稿文章 <code>02_Draft.md</code></span>
+        <span class="t2">按段落与情绪节奏设计插图</span>
+      </div>
+      <div class="tm tm-red">
+        <span class="tt">归档后回补</span>
+        <span class="t1">必须指定 <code>--output-dir</code></span>
+        <span class="t2">避免后续错误或图片错位覆盖</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="cards">
+      <div class="card k-purple">
+        <div class="chead"><span class="cstage">STEP 1 · 分镜设计</span><span class="crole">张艺谋</span></div>
+        <ul class="cbody">
+          <li>识别情绪节奏与留白处，跟随情绪转折插图</li>
+          <li>不按字数机械计算；1500–2000 字通常 4–6 张</li>
+          <li>输出遵循 <code>io_schema.md</code> 的 Markdown / Regex 结构</li>
+        </ul>
+        <div class="cout">产出 <code>Storyboard.md</code></div>
+      </div>
+      <div class="arw">→</div>
+      <div class="card k-blue">
+        <div class="chead"><span class="cstage">STEP 2 · 出图前决策</span><span class="crole">用户</span></div>
+        <ul class="cbody">
+          <li>每次都重读 <code>conductor/api_keys.json</code></li>
+          <li>展示可选渠道，等待用户显式选择</li>
+          <li>禁止因「只有一个 provider」就自动代选</li>
+        </ul>
+        <div class="cout">产出 渠道已选定</div>
+      </div>
+      <div class="arw">→</div>
+      <div class="card k-green">
+        <div class="chead"><span class="cstage">STEP 3 · 批量执行</span><span class="crole">visualize.py</span></div>
+        <ul class="cbody">
+          <li>读取 <code>Storyboard.md</code> 中的 Prompt 代码块</li>
+          <li>优先传 <code>--draft</code>：生成 → 压缩 → 传 COS → 注入正文</li>
+          <li><code>auto</code> 顺序固定 <b>gpt-image2 → gemini</b></li>
+        </ul>
+        <div class="cout">产出 <code>zpicture.assets/</code> + 正文注入</div>
+      </div>
+      <div class="arw">→</div>
+      <div class="card k-orange">
+        <div class="chead"><span class="cstage">STEP 4 · 图片交付验收</span><span class="crole">马可婷 / 用户</span></div>
+        <ul class="cbody">
+          <li>Agent / 平台出图时必做</li>
+          <li>跑 <code>validate_images.py</code> 对齐分镜</li>
+          <li>检查齐图、尺寸、比例、可读性</li>
+        </ul>
+        <div class="cout">产出 可发布配图</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="slabel">② 关键节点</div>
+    <div class="nodes">
+      <div class="node"><b>分镜完成</b><span>必须先有 Storyboard.md</span></div>
+      <div class="node"><b>用户确认</b><span>选定渠道后才执行生图</span></div>
+      <div class="node"><b>auto 回退</b><span>gpt-image2 → gemini；gemini-web 须显式指定</span></div>
+      <div class="node"><b>IP 参考图</b><span>IP 一致时读取 assets/IP_Reference.png</span></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="slabel">③ 三类图片规格</div>
+    <div class="specs">
+      <div class="spec sp-purple">
+        <span class="sh">Part A 主视觉</span>
+        <span class="sx"><b>2.35:1</b>（1504×640）· movie composition · 禁止 Context 字段 · 结尾 <code>--ar 2.35:1</code></span>
+      </div>
+      <div class="spec sp-blue">
+        <span class="sh">Part B 侧边栏</span>
+        <span class="sx"><b>1:1</b>（1024×1024）· 纯色背景 · 中文 4–6 字 · 上下两行 · 禁止英文</span>
+      </div>
+      <div class="spec sp-green">
+        <span class="sh">Part C 内文配图</span>
+        <span class="sx"><b>3:4</b>（768×1024）· 每张必须有 Context · 锚点为上一段最后一句原文</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="fl">执行链</span>
+    <span class="fx">Storyboard.md → visualize.py → 生成图片 → 压缩 → 上传 COS → 插入正文 → <span class="hl">原图保留在项目内</span></span>
+  </div>
+
+</body>
+</html>

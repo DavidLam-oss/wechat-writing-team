@@ -12,8 +12,8 @@
 
 | 技能 | 入口 | 做什么 |
 |:--|:--|:--|
-| **wechat-writer** | `/interview` `/write` `/sprout` `/harvest` | 写作流水线：访谈挖掘 → 策划 → 撰写 → 四轮审校 → 包装 → 归档 |
-| **wechat-director** | `/draw` | 视觉导演：读定稿设计分镜（默认电影感 + 认知草图双镜头）→ 批量生图 → 注入正文 → 拼接封面 |
+| **wechat-writer** | `/interview` `/write` `/sprout` `/harvest` | 写作流水线：发芽 → 访谈挖掘 → 策划 → 撰写 → **四层审校**（L1 硬规则 / L2 风格一致性 / L3 内容成立度 / L4 老友感终审）→ 制作包装 → 归档 |
+| **wechat-director** | `/draw` | 视觉导演 4 步：分镜设计（默认电影感 + 认知草图双镜头）→ **出图渠道决策（强制显式选择）** → 批量生图 + 注入正文 + 拼封面 → 图片交付验收 |
 | **wechat-official-batch-download** | — | 素材采集：批量下载公众号文章，保留 HTML / Markdown / 图片 / 元数据，构建可追溯语料库 |
 
 ![WeChat Writer 工作流（v3.7.0）](assets/wechat_writer_flow_wide_clean_v37.png)
@@ -28,7 +28,7 @@
 .
 ├── README.md                  # 本文件（入门引导）
 ├── 用户手册.md                 # 完整手册：工作区结构 / 全流程 / 脚本速查 / FAQ
-├── assets/                    # 工作流示意图
+├── assets/                    # 工作流示意图（source/ 为可重渲染的 HTML 源 + render.py）
 └── skills/
     ├── wechat-writer/
     │   ├── SKILL.md           # 主入口（Skill 触发点）
@@ -39,7 +39,7 @@
     │   │   ├── console_encoding.py  # Windows 控制台编码兜底
     │   │   ├── cleaner.py           # 素材清洗
     │   │   ├── research.py          # 事实核查
-    │   │   ├── review_toolkit.py    # 四轮审校 + 综改指令
+    │   │   ├── review_toolkit.py    # 四层审校 + 综改指令
     │   │   ├── article_assets.py    # 稿件图片引用解析与可移植复制
     │   │   ├── archive.py           # 归档 + 图片复制 + 索引更新
     │   │   ├── material_store.py    # 素材 / Seed 落盘（需用户确认）
@@ -57,10 +57,11 @@
     │   │   ├── brief_parser.py      # Storyboard 解析
     │   │   ├── workspace.py         # 工作区根解析
     │   │   ├── config_check.py      # 环境与渠道检测
+    │   │   ├── console_encoding.py  # Windows 控制台编码兜底
     │   │   ├── validate_images.py   # Agent/平台出图后的交付验收
     │   │   ├── image_validation.py  # 图片规格单一来源
     │   │   ├── obsidian_bridge.py   # Obsidian CLI 桥接（可选）
-    │   │   └── providers/           # gemini / gpt_image2 适配器
+    │   │   └── providers/           # gemini / gpt-image2 适配器（siliconflow 保留但未接入选择路径）
     │   ├── references/
     │   └── tests/              # 32 条行为护栏
     └── wechat-official-batch-download/

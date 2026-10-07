@@ -50,3 +50,7 @@ api_keys.json
 
 # Misc
 *.log
+
+# Diagram render output (sources live in assets/source/; committed PNGs in assets/)
+assets/source/*.png
+assets/source/*.webp

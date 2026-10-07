@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:#fff}
+  body{
+    width:1400px;background:#fff;color:#14161A;
+    padding:38px 40px 34px;
+    font-family:'PingFang SC','Hiragino Sans GB','Heiti SC',-apple-system,'Segoe UI',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  code{font-family:'SF Mono','JetBrains Mono','Menlo',monospace;font-size:.94em}
+
+  /* ---------- header ---------- */
+  .hd h1{font-size:42px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+  .hd h1 .ver{color:#3B5BDB}
+  .hd .sub{font-size:21px;color:#2B313B;margin-top:8px;font-weight:600}
+  .hd .goal{font-size:15px;color:#6E7A8A;margin-top:9px}
+
+  /* ---------- generic section ---------- */
+  .sec{margin-top:18px}
+  .sec > .slabel{font-size:17px;font-weight:700;color:#14161A;margin-bottom:9px}
+  .sec > .slabel .dim{color:#93A0B0;font-weight:600}
+
+  /* ---------- principle ---------- */
+  .principle{
+    margin-top:16px;display:flex;gap:12px;align-items:baseline;
+    background:#F4F8FF;border:1px solid #CFDEFF;border-left:5px solid #3B5BDB;
+    border-radius:10px;padding:13px 18px;font-size:14.5px;color:#243043;line-height:1.55;
+  }
+  .principle .plabel{color:#3B5BDB;font-weight:700;flex:none}
+  .principle b{color:#14161A}
+
+  /* ---------- entry row ---------- */
+  .entries{display:flex;gap:12px}
+  .entry{
+    flex:1;border-radius:9px;padding:10px 14px;border:1px solid;
+    display:flex;flex-direction:column;gap:3px;background:#fff;
+  }
+  .entry b{font-size:15px;font-weight:700}
+  .entry span{font-size:11.5px;color:#5A6675}
+  .entry em{font-size:11px;font-style:normal;color:#8A95A4}
+  .e-purple{border-color:#D3C7FF;background:#FAF8FF}
+  .e-purple b{color:#6E56CF}
+  .e-blue{border-color:#C7DAFF;background:#F7FAFF}
+  .e-blue b{color:#3B5BDB}
+  .e-green{border-color:#BEEAD6;background:#F4FCF8}
+  .e-green b{color:#0E9464}
+
+  /* ---------- stage cards ---------- */
+  .cards{display:flex;align-items:stretch;gap:0}
+  .arw{flex:none;width:13px;display:flex;align-items:center;justify-content:center;
+       color:#C2CBD8;font-size:15px;line-height:1}
+  .card{
+    flex:1;min-width:0;border:1.4px solid;border-radius:10px;background:#fff;
+    padding:11px 12px 10px;display:flex;flex-direction:column;
+  }
+  .chead{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+  .cstage{font-size:11.5px;font-weight:700;letter-spacing:.02em}
+  .crole{font-size:11.5px;color:#4C5666;font-weight:600}
+  .cbody{font-size:11.5px;color:#39424F;line-height:1.62;flex:1}
+  .cbody li{list-style:none;padding-left:11px;position:relative}
+  .cbody li::before{content:"·";position:absolute;left:2px;color:#AEB8C6;font-weight:700}
+  .cout{
+    margin-top:9px;padding-top:8px;border-top:1px dashed #E3E7EE;
+    font-size:10.5px;color:#8A95A4;
+  }
+  .cout code{color:#243043;background:#F3F5F8;padding:1px 5px;border-radius:3px;white-space:nowrap}
+  .k-purple{border-color:#D3C7FF} .k-purple .cstage{color:#6E56CF} .k-purple{background:#FDFCFF}
+  .k-blue{border-color:#C7DAFF}   .k-blue .cstage{color:#3B5BDB}   .k-blue{background:#FBFCFF}
+  .k-green{border-color:#BEEAD6}  .k-green .cstage{color:#0E9464}  .k-green{background:#FBFFFD}
+  .k-orange{border-color:#F8DDB0} .k-orange .cstage{color:#C2760A} .k-orange{background:#FFFDF8}
+  .k-red{border-color:#F7C6CE}    .k-red .cstage{color:#CE3244}    .k-red{background:#FFFCFD}
+  .k-gold{border-color:#F2DFA4}   .k-gold .cstage{color:#A8790A}   .k-gold{background:#FFFEF9}
+
+  /* ---------- stop row (aligned to the card grid) ---------- */
+  .stops{display:flex;align-items:stretch;gap:0;margin-top:10px}
+  .sslot{flex:1;min-width:0;display:flex}
+  .stop{
+    flex:1;text-align:center;border-radius:6px;padding:6px 10px;
+    font-size:11.5px;font-weight:600;letter-spacing:.01em;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .s-green{background:#E9F9F1;color:#0B7F55;border:1px solid #B6E7CE}
+  .s-orange{background:#FFF4E3;color:#B5710A;border:1px solid #F7D9A6}
+  .s-gold{background:#FFF9E4;color:#9C7508;border:1px solid #F0E0A6}
+
+  /* ---------- bypass ---------- */
+  .row2{display:flex;gap:14px}
+  .byp{flex:1;border-radius:9px;border:1px solid;padding:11px 15px;display:flex;flex-direction:column;gap:4px}
+  .byp .bt{font-size:13.5px;font-weight:700}
+  .byp .bx{font-size:12px;color:#4C5666;line-height:1.58}
+  .b-green{border-color:#BEEAD6;background:#F5FCF9} .b-green .bt{color:#0E9464}
+  .b-red{border-color:#F7C6CE;background:#FFF7F8}   .b-red .bt{color:#CE3244}
+
+  /* ---------- footer ---------- */
+  .foot{margin-top:18px;display:flex;gap:10px;align-items:baseline;font-size:14px}
+  .foot .fl{font-weight:700;color:#14161A;flex:none}
+  .foot .fx{color:#3D4450;font-family:'SF Mono','JetBrains Mono','Menlo',monospace;font-size:13px}
+  .foot .fx .hl{color:#3B5BDB;font-weight:700}
+</style>
+</head>
+<body>
+
+  <div class="hd">
+    <h1>WeChat Writer <span class="ver">v3.7.0</span></h1>
+    <p class="sub">微信公众号写作系统：角色与流程总览</p>
+    <p class="goal">目标：把模糊想法或已有素材，稳定加工成可发布的微信公众号文章。</p>
+  </div>
+
+  <div class="principle">
+    <span class="plabel">核心原则</span>
+    <span><b>David 的真实经历、判断和语气是正文核心</b>；AI 负责结构、调研、审校、包装。Seed 只扩素材、不改文风，不替代亲历。</span>
+  </div>
+
+  <div class="sec">
+    <div class="slabel">① 入口选择 <span class="dim">— 三种入口 + 一层前置能力 + 一个内置步骤</span></div>
+    <div class="entries">
+      <div class="entry e-purple">
+        <b>/interview</b><span>没素材：先聊后写</span><em>访谈生成 <code>Raw_*.md</code></em>
+      </div>
+      <div class="entry e-blue">
+        <b>/write</b><span>有素材：直接转化</span><em>笔记或素材进入策划</em>
+      </div>
+      <div class="entry e-green">
+        <b>/sprout &nbsp;/harvest</b><span>缺案例：先发芽</span><em>补人物、事件、故事</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="cards">
+      <div class="card k-green">
+        <div class="chead"><span class="cstage">PRE-STAGE · 发芽</span><span class="crole">主编 · 呼延雷锋</span></div>
+        <ul class="cbody">
+          <li>把外部人物 / 事件 / 故事加工成结构化 Seed</li>
+          <li><code>concept</code> 拦截，<code>trend</code> 走热点嫁接四问</li>
+        </ul>
+        <div class="cout">产出 <code>Seed_[Topic].md</code></div>
+      </div>
+      <div class="arw">→</div>
+      <div class="card k-purple">
+        <div class="chead"><span class="cstage">STAGE 0 · 访谈</span><span class="crole">首席记者 · Lyra</span></div>
+        <ul class="cbody">
+          <li>苏格拉底式追问 5–10 轮</li>
+          <li>高保真记录，禁止摘要或书面化润色</li>
+        </ul>
+        <div class="cout">产出 <code>_source/Raw_[Title].md</code></div>
+      </div>
+      <div class="arw">→</div>
+      <div class="card k-blue">
+        <div class="chead"><span class="cstage">STAGE 1 · 策划</span><span class="crole">主编 · 呼延雷锋</span></div>
+        <ul class="cbody">
+          <li>清洗素材 + 剪藏找料（内置步骤）</li>
+          <li>选题质检卡 / 人机边界卡 / SEO 决策卡</li>
+        </ul>
+        <div class="cout">产出 <code>01_Plan.md</code></div>
+      </div>
+      <div class="arw">→</div>
+      <div class="card k-orange">
+        <div class="chead"><span class="cstage">STAGE 2 · 撰写</span><span class="crole">主笔 · 冰清</span></div>
+        <ul class="cbody">
+          <li>按 <code>01_Plan.md</code> 写正文，保留作者语气与心流</li>
+          <li>罗永浩毒舌体检 → Critique → Directive</li>
+        </ul>
+        <div class="cout">产出 <code>02_Draft.md</code></div>
+      </div>
+      <div class="arw">→</div>
+      <div class="card k-red">
+        <div class="chead"><span class="cstage">STAGE 3 · 制作</span><span class="crole">制作人 · 马可婷</span></div>
+        <ul class="cbody">
+          <li>4 个标题方案 + slug；摘要 50–100 字</li>
+          <li>36 个官方白名单 Tags 挑 2–4 个</li>
+        </ul>
+        <div class="cout">产出 <code>03_Production.md</code></div>
+      </div>
+      <div class="arw">→</div>
+      <div class="card k-gold">
+        <div class="chead"><span class="cstage">STAGE 4 · 归档</span><span class="crole">制作人 · 马可婷</span></div>
+        <ul class="cbody">
+          <li>图片 SEO 巡检（生成 alt 显示名）</li>
+          <li>Frontmatter 规范化 + 沉淀团队记忆</li>
+        </ul>
+        <div class="cout">产出 <code>published/[Title].md</code></div>
+      </div>
+    </div>
+    <div class="stops">
+      <div class="sslot"></div><div class="arw"></div>
+      <div class="sslot"></div><div class="arw"></div>
+      <div class="sslot"><div class="stop s-green">STOP 1 &nbsp;审核大纲</div></div><div class="arw"></div>
+      <div class="sslot"><div class="stop s-orange">STOP 2 &nbsp;审核正文</div></div><div class="arw"></div>
+      <div class="sslot"><div class="stop s-orange">STOP 3 &nbsp;审核包装</div></div><div class="arw"></div>
+      <div class="sslot"><div class="stop s-gold">STOP 4 &nbsp;确认归档</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="slabel">② 两条关键旁路 <span class="dim">— 不打断主流程</span></div>
+    <div class="row2">
+      <div class="byp b-red">
+        <span class="bt">审校回路（Stage 2 内置）</span>
+        <span class="bx">审校不直接改文；先出报告 → 再给综改指令 → 再由主笔修改，避免边看边改没边。</span>
+      </div>
+      <div class="byp b-green">
+        <span class="bt">断点续写</span>
+        <span class="bx"><code>/write "Title" --from-stage N</code> 从任意阶段继续，不必重跑全流程。</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="fl">交付链</span>
+    <span class="fx">01_Plan.md → 02_Draft.md → 03_Production.md → <span class="hl">published/[Title].md</span></span>
+  </div>
+
+</body>
+</html>
