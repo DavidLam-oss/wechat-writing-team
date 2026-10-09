@@ -1,8 +1,17 @@
 # WeChat Writing Team
 
-[![Obsidian 微信发布插件](https://img.shields.io/badge/Obsidian-微信发布-blue?logo=obsidian)](https://github.com/DavidLam-oss/obsidian-wechat-converter) [Obsidian 微信发布插件](https://github.com/DavidLam-oss/obsidian-wechat-converter) — 写完文章后一键发送到微信公众号草稿箱
+> 一套可复用的公众号写作流水线：**发芽 → 访谈 → 策划 → 撰写 → 四层审校 → 配图 → 归档**。
+
+![License](https://img.shields.io/badge/license-MIT-green)
+![Skills](https://img.shields.io/badge/skills-3-blue)
+![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-d97757)
+![Codex](https://img.shields.io/badge/Codex-Skill-000000)
+![Gemini CLI](https://img.shields.io/badge/Gemini%20CLI-Skill-4285F4)
+[![Obsidian 微信发布插件](https://img.shields.io/badge/Obsidian-微信发布插件-7c3aed?logo=obsidian)](https://github.com/DavidLam-oss/obsidian-wechat-converter)
 
 微信公众号**写作 + 视觉导演 + 素材采集**全套 Skill。对接 Claude Code / Codex / Gemini CLI，让 AI 帮你从访谈挖掘、素材发芽、配图生成一路跑到归档发布。
+
+写完之后交给 [obsidian-wechat-converter](https://github.com/DavidLam-oss/obsidian-wechat-converter) 一键发送到微信公众号草稿箱 —— 本仓库负责**写**，那个插件负责**发**。
 
 > **首次使用请先读 [`用户手册.md`](用户手册.md)** —— 里面写了工作区怎么建、每一步产出什么、常见问题怎么排查。
 
@@ -188,6 +197,38 @@ TinyPNG 压缩（`tinify.api_key`）和腾讯云 COS 上传（`cos.*`）为**可
 - qcloud-cos-python-sdk-v5（腾讯云上传，可选）
 - Obsidian CLI（给草稿写属性 / 打开预览，可选）
 - bun + `vendor/baoyu-danger-gemini-web`（`--provider gemini-web` 需要，可选）
+
+---
+
+## 相关项目
+
+本仓库是这条流水线**写作**的一端，配套的**发布**与**沉淀**在另外两个仓库：
+
+| 项目 | 说明 |
+|:--|:--|
+| [obsidian-wechat-converter](https://github.com/DavidLam-oss/obsidian-wechat-converter) | Obsidian 公众号排版与多平台发布插件。Markdown 转公众号 HTML、同步飞书云文档，并把草稿发往小红书 / 知乎 / 今日头条等平台 |
+| [openxiaoweibox](https://github.com/DavidLam-oss/openxiaoweibox) | 开放文章库。Obsidian 系统教程 106 篇、AI 工作流实战 57 篇，以及随笔复盘 |
+
+一条完整链路是：**本仓库的 Skill 写稿 → 导出 Markdown → converter 排版并发布**。
+
+---
+
+## 全平台
+
+- 微信公众号 / 视频号 / 小红书 / 知乎 / 微博 / 抖音 / B 站：**林小卫很行**
+- 个人网站：<https://xiaoweibox.top>
+
+---
+
+## 作者
+
+**林小卫很行（DavidLam）** —— 用 AI 重构生活的务实派：外企 IT 团队 BA / AI 构建者 / 二娃奶爸。
+
+白天做需求分析，业余把重复的脑力消耗固化成流水线。这套 Skill 是「**SOP is Soul**」的一次实践：写公众号原本要在十几个工具之间来回搬运，现在是一条能跑通的流水线。
+
+- 文章库：[openxiaoweibox](https://github.com/DavidLam-oss/openxiaoweibox)
+- 相关工具：[obsidian-wechat-converter](https://github.com/DavidLam-oss/obsidian-wechat-converter)
+- 遇到问题或有建议，欢迎到 [Issues](https://github.com/DavidLam-oss/wechat-writing-team/issues) 留言。
 
 ---
 
